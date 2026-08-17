@@ -6,6 +6,12 @@
 
 这是独立的社区项目，不是 DeepSeek 官方发行版。仓库不包含 API Key、历史对话、记忆数据库、浏览器资料、个人自动化、本地模型或模型权重。下载者必须配置自己的模型和凭据。
 
+## macOS App
+
+使用 macOS 13 或更高版本的 Apple Silicon 用户，可以直接从 [GitHub Releases](https://github.com/wendymyyht-ctrl/deepseek-harness-optimized/releases) 下载 ZIP 或 DMG。App 已内置经过校验的 Node.js 运行时，并在原生窗口中打开 Harness，不需要另行安装 Node.js。
+
+当前社区构建采用 ad-hoc 签名，尚未经过 Apple 公证。如果首次双击被 macOS 阻止，请按住 Control 点击 App，然后选择**打开**。凭据和对话只会写入 `~/Library/Application Support/DeepSeek Harness Optimized`。
+
 ## 主要优化
 
 ### HTML 不再直接“生吃”

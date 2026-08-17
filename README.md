@@ -6,6 +6,12 @@ A privacy-safe, reusable [DeepSeek Harness](https://github.com/deepseek-ai/deeps
 
 This is an independent community project, not an official DeepSeek release. It contains no API key, conversation, memory database, browser profile, personal automation, local model, or model weight. Every user supplies their own model endpoint and credentials.
 
+## macOS app
+
+Apple Silicon users on macOS 13 or newer can download the ZIP or DMG from [GitHub Releases](https://github.com/wendymyyht-ctrl/deepseek-harness-optimized/releases). The app bundles its own verified Node.js runtime and opens Harness in a native window; no separate Node.js installation is required.
+
+The community build is ad-hoc signed and not notarized. On first launch, Control-click the app and choose **Open** if macOS blocks a normal double-click. Credentials and conversations are written only to `~/Library/Application Support/DeepSeek Harness Optimized`.
+
 ## What it changes
 
 ### Indexed HTML fast path

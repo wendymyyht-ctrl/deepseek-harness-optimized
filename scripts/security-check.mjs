@@ -3,7 +3,7 @@ import { extname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
-const ignoredDirectories = new Set(['.git', 'node_modules', 'coverage', 'dist'])
+const ignoredDirectories = new Set(['.git', 'node_modules', 'build', 'coverage', 'dist'])
 const forbiddenNames = [
   /^\.credentials\.ya?ml$/iu,
   /^settings\.ya?ml$/iu,
