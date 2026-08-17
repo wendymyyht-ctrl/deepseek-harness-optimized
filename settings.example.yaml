@@ -1,0 +1,13 @@
+# Optional advanced example. The Web UI at Settings → Models is easier.
+# Save your real configuration to $DSH_HOME/settings.yaml, never to this repo.
+llm-pi-ai:
+  providers:
+    my-openai-compatible-api:
+      displayName: My OpenAI-compatible provider
+      apiKeyEnv: MY_PROVIDER_API_KEY
+      api: openai-completions
+      baseURL: https://gateway.example/v1
+      models:
+        - id: my-model
+          contextWindow: 262144
+          maxTokens: 32768

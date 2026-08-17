@@ -1,0 +1,38 @@
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+*.log
+.DS_Store
+
+# Secrets and local settings
+.env
+.env.*
+!.env.example
+.credentials.yaml
+credentials.yaml
+settings.yaml
+*.pem
+*.key
+
+# Harness runtime state — never commit conversations or personal data
+.dsh/
+.dsh-*/
+runtime-home/
+memory/
+storages/
+sessions/
+browser-profile/
+browser-output/
+automations/
+accounts/
+*.sqlite
+*.sqlite3
+*.db
+
+# Local model weights
+*.gguf
+*.safetensors
+*.bin
+*.pt
+*.pth

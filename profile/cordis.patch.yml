@@ -1,0 +1,18 @@
+# The Web bundle disables compaction by default; this profile restores it.
+- id: compaction-basic
+  disabled: false
+
+- id: command-compact
+  disabled: false
+
+- id: tool-result-pruner
+  disabled: false
+
+- insert:
+    # Parse, index, search and compare HTML before sending bounded evidence to the model.
+    - id: tool-html-local
+      name: './tool-html-local.mjs'
+
+    # If a provider stops at max_tokens, compact and continue automatically.
+    - id: auto-compact-continue
+      name: './auto-compact-continue.mjs'

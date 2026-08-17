@@ -1,0 +1,24 @@
+{
+  "name": "deepseek-harness-optimized",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "A privacy-safe DeepSeek Harness profile with indexed HTML tools and automatic compact-and-continue.",
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "workspaces": [
+    "profile"
+  ],
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "start": "node scripts/start.mjs",
+    "test": "node --test profile/tests/*.test.mjs",
+    "security-check": "node scripts/security-check.mjs",
+    "verify": "node --test profile/tests/*.test.mjs && node scripts/security-check.mjs"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh": "0.1.0-rc.7"
+  }
+}

@@ -1,0 +1,11 @@
+packages:
+  - profile
+
+# pnpm 11 blocks dependency build scripts unless they are explicitly approved.
+# These are transitive dependencies of the pinned DeepSeek Harness release.
+allowBuilds:
+  '@deepseek-ai/dsh-subprocess-local': true
+  '@google/genai': true
+  koffi: true
+  node-pty: true
+  protobufjs: true
