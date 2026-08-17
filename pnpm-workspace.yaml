@@ -1,11 +1,23 @@
 packages:
   - profile
 
+# Release builds stage both the host and Windows x64 optional binaries. Keeping
+# the current platform too lets a non-Windows builder smoke-test the staged
+# server before packaging it into the Portable EXE.
+supportedArchitectures:
+  os:
+    - current
+    - win32
+  cpu:
+    - current
+    - x64
+
 # pnpm 11 blocks dependency build scripts unless they are explicitly approved.
 # These are dependencies of the pinned app and development toolchain.
 allowBuilds:
   '@deepseek-ai/dsh-subprocess-local': true
   '@google/genai': true
+  electron-winstaller: true
   esbuild: true
   koffi: true
   node-pty: true

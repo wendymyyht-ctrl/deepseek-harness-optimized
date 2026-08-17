@@ -6,7 +6,15 @@
 
 这是独立的社区项目，不是 DeepSeek 官方发行版。仓库不包含 API Key、历史对话、记忆数据库、浏览器资料、个人自动化、本地模型或模型权重。下载者必须配置自己的模型和凭据。
 
-## macOS App
+## 桌面版
+
+### Windows EXE
+
+Windows 10/11 x64 用户可以从 [GitHub Releases](https://github.com/wendymyyht-ctrl/deepseek-harness-optimized/releases) 下载单文件 Portable EXE。它已内置 Electron、Node.js、Harness 和优化 Profile，无须另行安装 Node.js；双击即可启动独立桌面窗口。运行数据默认保存在 `%APPDATA%\DeepSeek Harness Optimized`。
+
+当前社区 EXE 尚未使用商业代码签名证书签名，因此 Windows SmartScreen 可能显示“未知发布者”。这是发布者身份校验提示，不代表安装包包含作者的 API Key 或私人数据；请通过 Release 中的 SHA256 文件校验下载内容。
+
+### macOS App
 
 使用 macOS 13 或更高版本的 Apple Silicon 用户，可以直接从 [GitHub Releases](https://github.com/wendymyyht-ctrl/deepseek-harness-optimized/releases) 下载 ZIP 或 DMG。App 已内置经过校验的 Node.js 运行时，并在原生窗口中打开 Harness，不需要另行安装 Node.js。
 
@@ -34,6 +42,12 @@
 ### 模型可以在线切换
 
 Harness 可以配置 DeepSeek、其他目录提供方，以及自定义 OpenAI 兼容接口。保存模型更改后，下一次请求立即生效，不需要重启服务器。已经发送过请求的旧会话会保留自己日志中的模型路由；如果要完全干净地切换，建议选择模型后新建会话。
+
+### 本地模型与会话持久化
+
+Ollama、vLLM、llama.cpp 等本地 OpenAI 兼容服务可以作为自定义 Provider 使用，因此本地 DeepSeek、Qwen 和其他模型都能接入。安装包不附带模型权重，上下文长度也不强制写死；实际上限由模型与推理服务决定。
+
+Harness 会把会话保存在本机，退出应用或重启后可以重新打开旧会话继续。这属于**会话持久化与跨重启恢复**。当前公开版不会把所有旧对话自动注入每个新对话，也不附带个人全局记忆数据库。完整功能边界见[已实现功能](FEATURES.zh-CN.md)。
 
 ## 环境要求
 
@@ -82,7 +96,7 @@ DSH_HOME=/path/to/runtime DSH_PROFILE=my-profile npm start
 npm run verify
 ```
 
-测试覆盖自动路由、HTML 索引、受限源码读取、版本比较、索引缓存和自动续写。安全检查会拦截常见密钥格式、私人运行数据文件、模型权重和个人 macOS 路径。
+测试覆盖自动路由、HTML 索引、受限源码读取、版本比较、索引缓存和自动续写。安全检查会拦截常见密钥格式、私人运行数据文件、模型权重和个人机器路径。
 
 ## 有意排除的内容
 

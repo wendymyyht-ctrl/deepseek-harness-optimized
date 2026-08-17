@@ -6,7 +6,15 @@ A privacy-safe, reusable [DeepSeek Harness](https://github.com/deepseek-ai/deeps
 
 This is an independent community project, not an official DeepSeek release. It contains no API key, conversation, memory database, browser profile, personal automation, local model, or model weight. Every user supplies their own model endpoint and credentials.
 
-## macOS app
+## Desktop apps
+
+### Windows EXE
+
+Windows 10/11 x64 users can download a single-file Portable EXE from [GitHub Releases](https://github.com/wendymyyht-ctrl/deepseek-harness-optimized/releases). It bundles Electron, Node.js, Harness, and the optimized profile, and opens in a standalone desktop window. Runtime data is stored under `%APPDATA%\DeepSeek Harness Optimized`.
+
+The community EXE is currently unsigned, so Windows SmartScreen may show an unknown-publisher warning. Verify the download against the SHA256 file attached to the Release.
+
+### macOS app
 
 Apple Silicon users on macOS 13 or newer can download the ZIP or DMG from [GitHub Releases](https://github.com/wendymyyht-ctrl/deepseek-harness-optimized/releases). The app bundles its own verified Node.js runtime and opens Harness in a native window; no separate Node.js installation is required.
 
@@ -34,6 +42,12 @@ When the provider ends a response with `max-tokens`, the profile asks Harness to
 ### Live model switching
 
 Harness supports DeepSeek, catalog providers, and custom OpenAI-compatible endpoints. A saved model change takes effect on the next request without restarting the server. Existing conversations keep the route recorded in their own session; choose the desired model for a new conversation when you want a clean switch.
+
+### Local models and persistent conversations
+
+Ollama, vLLM, llama.cpp, and other local OpenAI-compatible servers can be added as custom providers, including locally served DeepSeek and Qwen models. No model weights are bundled, and the project does not hard-code a 64K, 262K, or 1M context limit; the selected model and inference server determine the actual limit.
+
+Harness stores conversations locally so an existing session can be reopened after the app or computer restarts. This is durable session history, not silent global memory: the public build does not inject every old conversation into every new chat and ships no personal memory database. See [Implemented features](FEATURES.md) for the exact boundary.
 
 ## Requirements
 

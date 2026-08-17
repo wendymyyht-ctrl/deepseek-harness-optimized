@@ -1,6 +1,6 @@
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
-import { homedir } from 'node:os'
+import { homedir, platform } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
@@ -8,10 +8,17 @@ import { spawn } from 'node:child_process'
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const sourceProfile = join(appRoot, 'profile')
 const profileName = process.env.DSH_PROFILE?.trim() || 'optimized-app'
-const runtimeHome = resolve(
-  process.env.DSH_HOME?.trim()
-    || join(homedir(), 'Library', 'Application Support', 'DeepSeek Harness Optimized'),
-)
+function defaultRuntimeHome() {
+  if (platform() === 'darwin') {
+    return join(homedir(), 'Library', 'Application Support', 'DeepSeek Harness Optimized')
+  }
+  if (platform() === 'win32') {
+    return join(process.env.APPDATA?.trim() || join(homedir(), 'AppData', 'Roaming'), 'DeepSeek Harness Optimized')
+  }
+  return join(process.env.XDG_DATA_HOME?.trim() || join(homedir(), '.local', 'share'), 'deepseek-harness-optimized')
+}
+
+const runtimeHome = resolve(process.env.DSH_HOME?.trim() || defaultRuntimeHome())
 const targetProfile = join(runtimeHome, 'profiles', profileName)
 const markerPath = join(targetProfile, '.managed-by-deepseek-harness-optimized.json')
 const managedFiles = [

@@ -1,6 +1,6 @@
 {
   "name": "deepseek-harness-optimized",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "build:macos": "node scripts/build-macos.mjs",
+    "build:windows": "node scripts/build-windows.mjs",
     "setup": "node scripts/setup.mjs",
     "start": "node scripts/start.mjs",
     "test": "node --test profile/tests/*.test.mjs",
@@ -23,6 +24,7 @@
     "@deepseek-ai/dsh": "0.1.0-rc.7"
   },
   "devDependencies": {
+    "electron-builder": "26.15.3",
     "esbuild": "0.28.2"
   }
 }
