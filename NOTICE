@@ -6,3 +6,7 @@ It is not an official DeepSeek release.
 
 DeepSeek Harness is Copyright DeepSeek and is distributed under the MIT License:
 https://github.com/deepseek-ai/deepseek-harness
+
+Release builds also bundle the Google Workspace CLI 0.22.5 (Apache-2.0) and
+GitHub MCP Server 1.9.0 (MIT). Their upstream LICENSE files are included beside
+the binaries in each desktop application.

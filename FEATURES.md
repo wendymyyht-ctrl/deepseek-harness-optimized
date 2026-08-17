@@ -9,6 +9,9 @@ Harness capabilities, and capabilities the project does not claim.
 - Automatic choice between indexed evidence, focused source, and guarded full or paged source reads.
 - Automatic compact-and-continue after a provider reports a `max-tokens` stop.
 - Restored context compaction plus pruning of oversized tool results.
+- Opt-in GitHub and Notion MCP connectors with per-user OAuth.
+- Google Workspace command tools with per-user OAuth.
+- QQ Mail and NetEase Mail IMAP/SMTP tools with OS-protected authorization codes.
 
 ## Retained Harness capabilities
 
@@ -19,6 +22,7 @@ Harness capabilities, and capabilities the project does not claim.
 - Local JSONL conversation persistence and recovery after app or machine restarts.
 - Harness file, terminal, plan, goal, subagent, workflow, and model-settings surfaces, subject to runtime permissions.
 - Per-user runtime data isolation; public artifacts include no credentials, histories, personal memory, or model weights.
+- One shared 1.2.0 version across the macOS and Windows desktop artifacts.
 
 ## Cross-conversation memory boundary
 

@@ -27,7 +27,37 @@ const managedFiles = [
   'cordis.patch.yml',
   'auto-compact-continue.mjs',
   'tool-html-local.mjs',
+  'tool-integrations-local.mjs',
+  'tool-google-workspace-local.mjs',
+  'tool-email-local.mjs',
 ]
+
+const integrationsDirectory = join(runtimeHome, 'integrations')
+const integrationsConfigFile = join(integrationsDirectory, 'config.json')
+const googleConfigDirectory = join(integrationsDirectory, 'google-workspace')
+const emailDirectory = join(integrationsDirectory, 'email')
+const emailCredentialsDirectory = join(emailDirectory, 'credentials')
+const notionAuthDirectory = join(integrationsDirectory, 'notion-mcp')
+
+async function integrationFlags() {
+  try {
+    const parsed = JSON.parse(await readFile(integrationsConfigFile, 'utf8'))
+    return { github: parsed?.github === true, notion: parsed?.notion === true }
+  } catch (error) {
+    if (error?.code === 'ENOENT') return { github: false, notion: false }
+    throw new Error(`Unable to read ${integrationsConfigFile}: ${error}`)
+  }
+}
+
+function mcpRemoteEntry() {
+  const candidates = [
+    join(appRoot, 'node_modules', 'mcp-remote', 'dist', 'proxy.js'),
+    join(appRoot, 'profile', 'node_modules', 'mcp-remote', 'dist', 'proxy.js'),
+  ]
+  const found = candidates.find(existsSync)
+  if (!found) throw new Error('The bundled mcp-remote entrypoint is missing')
+  return found
+}
 
 async function installManagedProfile() {
   if (existsSync(targetProfile) && !existsSync(markerPath)) {
@@ -44,6 +74,13 @@ async function installManagedProfile() {
 }
 
 await installManagedProfile()
+await Promise.all([
+  mkdir(googleConfigDirectory, { recursive: true, mode: 0o700 }),
+  mkdir(emailCredentialsDirectory, { recursive: true, mode: 0o700 }),
+  mkdir(notionAuthDirectory, { recursive: true, mode: 0o700 }),
+])
+const enabledIntegrations = await integrationFlags()
+const executableSuffix = platform() === 'win32' ? '.exe' : ''
 const dshBin = join(appRoot, 'node_modules', '@deepseek-ai', 'dsh', 'lib', 'bin.js')
 const child = spawn(process.execPath, [
   dshBin,
@@ -54,7 +91,23 @@ const child = spawn(process.execPath, [
   ...process.argv.slice(2),
 ], {
   cwd: appRoot,
-  env: { ...process.env, DSH_HOME: runtimeHome },
+  env: {
+    ...process.env,
+    DSH_HOME: runtimeHome,
+    DSH_RUNTIME_HOME: runtimeHome,
+    DSH_NODE_BIN: process.execPath,
+    DSH_GWS_BIN: join(appRoot, 'vendor', 'bin', `gws${executableSuffix}`),
+    DSH_GITHUB_MCP_BIN: join(appRoot, 'vendor', 'bin', `github-mcp-server${executableSuffix}`),
+    DSH_MCP_REMOTE_ENTRY: mcpRemoteEntry(),
+    DSH_INTEGRATIONS_CONFIG_FILE: integrationsConfigFile,
+    DSH_GOOGLE_CONFIG_DIR: googleConfigDirectory,
+    DSH_EMAIL_ACCOUNTS_FILE: join(emailDirectory, 'accounts.json'),
+    DSH_EMAIL_CREDENTIALS_DIR: emailCredentialsDirectory,
+    DSH_EMAIL_KEYCHAIN_SERVICE: 'DeepSeek Harness Optimized Email Authorization Code',
+    DSH_NOTION_AUTH_DIR: notionAuthDirectory,
+    DSH_GITHUB_ENABLED: enabledIntegrations.github ? '1' : '0',
+    DSH_NOTION_ENABLED: enabledIntegrations.notion ? '1' : '0',
+  },
   stdio: 'inherit',
 })
 

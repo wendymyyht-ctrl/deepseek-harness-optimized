@@ -7,6 +7,7 @@ import { pipeline } from 'node:stream/promises'
 import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
 import { build } from 'esbuild'
+import { stageVendorBinaries } from './vendor-binaries.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
@@ -68,7 +69,7 @@ async function createIcon() {
   const iconset = join(iconWork, 'AppIcon.iconset')
   const master = join(iconWork, 'master.png')
   await mkdir(iconset, { recursive: true })
-  await run('sips', ['-s', 'format', 'png', join(root, 'macos', 'AppIcon.svg'), '--out', master])
+  await copyFile(join(root, 'macos', 'AppIcon.png'), master)
   const sizes = new Map([
     ['icon_16x16.png', 16], ['icon_16x16@2x.png', 32],
     ['icon_32x32.png', 32], ['icon_32x32@2x.png', 64],
@@ -88,7 +89,10 @@ async function stageApplicationCode() {
   for (const filename of ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml']) {
     await copyFile(join(root, filename), join(bundledApp, filename))
   }
-  for (const filename of ['package.json', 'cordis.yml', 'cordis.patch.yml', 'auto-compact-continue.mjs']) {
+  for (const filename of [
+    'package.json', 'cordis.yml', 'cordis.patch.yml', 'auto-compact-continue.mjs',
+    'tool-integrations-local.mjs', 'tool-google-workspace-local.mjs',
+  ]) {
     await copyFile(join(root, 'profile', filename), join(bundledApp, 'profile', filename))
   }
   await copyFile(join(root, 'scripts', 'app-server.mjs'), join(bundledApp, 'scripts', 'app-server.mjs'))
@@ -102,9 +106,25 @@ async function stageApplicationCode() {
     external: ['@deepseek-ai/dsh-tools'],
     legalComments: 'eof',
   })
+  await build({
+    entryPoints: [join(root, 'profile', 'tool-email-local.mjs')],
+    outfile: join(bundledApp, 'profile', 'tool-email-local.mjs'),
+    bundle: true,
+    platform: 'node',
+    format: 'esm',
+    target: 'node22',
+    external: ['@deepseek-ai/dsh-tools'],
+    banner: { js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" },
+    legalComments: 'eof',
+  })
   await run('pnpm', ['--config.minimumReleaseAge=0', 'install', '--prod', '--frozen-lockfile'], {
     cwd: bundledApp,
     env: { ...process.env, npm_config_arch: architecture },
+  })
+  await stageVendorBinaries({
+    targetPlatform: 'darwin',
+    targetArch: architecture,
+    destination: join(bundledApp, 'vendor'),
   })
   await removeGeneratedCommandShims(join(bundledApp, 'node_modules'))
 }

@@ -4,7 +4,7 @@
 
 A privacy-safe, reusable [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web profile. It keeps large HTML outside the model context until the model needs specific evidence, and automatically compacts and continues when a response reaches its output limit.
 
-This is an independent community project, not an official DeepSeek release. It contains no API key, conversation, memory database, browser profile, personal automation, local model, or model weight. Every user supplies their own model endpoint and credentials.
+This is an independent community project, not an official DeepSeek release. It contains no API key, OAuth token, email account, conversation, memory database, browser profile, personal automation, local model, or model weight. Every user supplies their own model endpoint and connects their own accounts.
 
 ## Desktop apps
 
@@ -39,6 +39,17 @@ This usually cuts prompt construction and inference time substantially on large 
 
 When the provider ends a response with `max-tokens`, the profile asks Harness to compact eligible context and queues a continuation automatically. It does not trigger for ordinary stops, and it does not continue when no safe compaction is available.
 
+### Optional account integrations
+
+The macOS and Windows 1.2.0 builds contain reusable integration code, but no pre-connected account:
+
+- Google Workspace through pinned `gws` 0.22.5 binaries; use `google_workspace_auth_status` and `google_workspace_auth_login`, then complete your own Google OAuth flow.
+- GitHub through GitHub's official MCP server 1.9.0 and browser OAuth.
+- Notion through Notion's official hosted MCP endpoint and browser OAuth.
+- QQ Mail and NetEase Mail through IMAP/SMTP. Add an account from **DeepSeek Harness Optimized → Email Account Settings…**. macOS stores its authorization code in Keychain; Windows encrypts it with DPAPI for the current Windows user.
+
+GitHub and Notion are opt-in so a fresh install never opens an account authorization page unexpectedly. Ask the agent to enable the desired integration, restart the app, and finish the provider login. Provider tokens and local account records are written only under the user's runtime directory and are excluded from source and release artifacts.
+
 ### Live model switching
 
 Harness supports DeepSeek, catalog providers, and custom OpenAI-compatible endpoints. A saved model change takes effect on the next request without restarting the server. Existing conversations keep the route recorded in their own session; choose the desired model for a new conversation when you want a clean switch.
@@ -61,6 +72,7 @@ Harness stores conversations locally so an existing session can be reopened afte
 git clone https://github.com/wendymyyht-ctrl/deepseek-harness-optimized.git
 cd deepseek-harness-optimized
 npm install
+npm run vendor:install
 npm start
 ```
 
@@ -96,11 +108,11 @@ For advanced configuration, copy the structure in `settings.example.yaml` into `
 npm run verify
 ```
 
-The test suite covers routing, indexing, bounded source access, comparison, index caching, and automatic continuation. The security check rejects common credential formats, private runtime filenames, model weights and personal macOS paths.
+The test suite covers routing, indexing, bounded source access, comparison, index caching, and automatic continuation. The security check rejects common credential formats, private runtime filenames, model weights and personal macOS paths. Release builds download pinned Google Workspace CLI and GitHub MCP binaries and verify their published SHA-256 checksums before packaging.
 
 ## Intentionally excluded
 
-Personal memory, past conversations, account integrations, browser state, automations, API credentials, local model routers, launch services, GGUF/SafeTensors files and machine-specific paths are intentionally excluded. A local DeepSeek or Qwen server can still be added from **Settings → Models** as a custom OpenAI-compatible provider.
+Personal memory, past conversations, connected-account records, OAuth tokens, browser state, automations, API credentials, local model routers, launch services, GGUF/SafeTensors files and machine-specific paths are intentionally excluded. Reusable Google, email, Notion and GitHub integration code is included; every user authorizes their own account locally. A local DeepSeek or Qwen server can be added from **Settings → Models** as a custom OpenAI-compatible provider.
 
 ## License
 

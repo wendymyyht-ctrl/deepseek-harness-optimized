@@ -16,3 +16,56 @@
     # If a provider stops at max_tokens, compact and continue automatically.
     - id: auto-compact-continue
       name: './auto-compact-continue.mjs'
+
+    # Integration controls are local-only. The generated config contains
+    # booleans, never OAuth tokens or account credentials.
+    - id: tool-integrations-local
+      name: './tool-integrations-local.mjs'
+
+    # Official Google Workspace CLI bridge. Users complete their own OAuth.
+    - id: tool-google-workspace-local
+      name: './tool-google-workspace-local.mjs'
+
+    # QQ and NetEase IMAP/SMTP bridge. Account authorization codes remain in
+    # macOS Keychain or the current Windows user's DPAPI credential file.
+    - id: tool-email-local
+      name: './tool-email-local.mjs'
+
+    # Official GitHub MCP binary. It remains off until the local integration
+    # switch is enabled, then uses browser OAuth on first use.
+    - id: mcp-github
+      name: '@deepseek-ai/dsh-mcp-client'
+      disabled: !!js process.env.DSH_GITHUB_ENABLED !== '1'
+      config:
+        serverName: github
+        transport: stdio
+        command: !!js process.env.DSH_GITHUB_MCP_BIN
+        args:
+          - 'stdio'
+          - '--toolsets=default,actions,notifications,projects,discussions'
+        cwd: !!js process.env.DSH_RUNTIME_HOME
+        toolCallTimeoutMs: 120000
+        failOnStartupError: false
+
+    # Official hosted Notion MCP through the OAuth-capable mcp-remote bridge.
+    - id: mcp-notion
+      name: '@deepseek-ai/dsh-mcp-client'
+      disabled: !!js process.env.DSH_NOTION_ENABLED !== '1'
+      config:
+        serverName: notion
+        transport: stdio
+        command: !!js process.env.DSH_NODE_BIN
+        args:
+          - !!js process.env.DSH_MCP_REMOTE_ENTRY
+          - 'https://mcp.notion.com/mcp'
+          - '--transport'
+          - 'http-first'
+          - '--auth-timeout'
+          - '120'
+        env:
+          MCP_REMOTE_CONFIG_DIR: !!js process.env.DSH_NOTION_AUTH_DIR
+          PATH: !!js process.env.PATH
+          ELECTRON_RUN_AS_NODE: !!js process.env.ELECTRON_RUN_AS_NODE
+        cwd: !!js process.env.DSH_RUNTIME_HOME
+        toolCallTimeoutMs: 120000
+        failOnStartupError: false

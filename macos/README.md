@@ -13,6 +13,6 @@ pnpm install
 pnpm run build:macos
 ```
 
-The build downloads the pinned official Node.js macOS archive, verifies its SHA-256 checksum, installs only production dependencies inside the app, bundles the HTML parser, compiles the native launcher, applies an ad-hoc signature, and creates ZIP and DMG artifacts under `dist/macos`.
+The build downloads the pinned Node.js, Google Workspace CLI and GitHub MCP Server archives, verifies their SHA-256 checksums, installs only production dependencies inside the app, bundles the HTML and email tools, compiles the native launcher, applies an ad-hoc signature, and creates ZIP and DMG artifacts under `dist/macos`. The icon is generated from the same blue-whale PNG used by the Windows build.
 
-Runtime credentials, settings and sessions live under `~/Library/Application Support/DeepSeek Harness Optimized`. The application bundle contains no user data or credentials.
+Runtime credentials, settings and sessions live under `~/Library/Application Support/DeepSeek Harness Optimized`. Email authorization codes are stored in macOS Keychain through the app menu. The application bundle contains no user data or credentials.

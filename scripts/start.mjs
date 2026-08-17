@@ -1,10 +1,29 @@
 import { spawn } from 'node:child_process'
+import { mkdir, readFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { installProfile } from './setup.mjs'
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const installed = await installProfile()
+const integrationsDirectory = join(installed.home, 'integrations')
+const integrationsConfigFile = join(integrationsDirectory, 'config.json')
+const googleConfigDirectory = join(integrationsDirectory, 'google-workspace')
+const emailDirectory = join(integrationsDirectory, 'email')
+const emailCredentialsDirectory = join(emailDirectory, 'credentials')
+const notionAuthDirectory = join(integrationsDirectory, 'notion-mcp')
+await Promise.all([
+  mkdir(googleConfigDirectory, { recursive: true, mode: 0o700 }),
+  mkdir(emailCredentialsDirectory, { recursive: true, mode: 0o700 }),
+  mkdir(notionAuthDirectory, { recursive: true, mode: 0o700 }),
+])
+let enabledIntegrations = { github: false, notion: false }
+try {
+  const parsed = JSON.parse(await readFile(integrationsConfigFile, 'utf8'))
+  enabledIntegrations = { github: parsed?.github === true, notion: parsed?.notion === true }
+} catch (error) {
+  if (error?.code !== 'ENOENT') throw error
+}
 const executable = join(
   repositoryRoot,
   'node_modules',
@@ -13,7 +32,23 @@ const executable = join(
 )
 const child = spawn(executable, ['--profile', installed.name, ...process.argv.slice(2)], {
   cwd: repositoryRoot,
-  env: { ...process.env, DSH_HOME: installed.home },
+  env: {
+    ...process.env,
+    DSH_HOME: installed.home,
+    DSH_RUNTIME_HOME: installed.home,
+    DSH_NODE_BIN: process.execPath,
+    DSH_GWS_BIN: installed.vendor.gws,
+    DSH_GITHUB_MCP_BIN: installed.vendor.githubMcp,
+    DSH_MCP_REMOTE_ENTRY: join(repositoryRoot, 'profile', 'node_modules', 'mcp-remote', 'dist', 'proxy.js'),
+    DSH_INTEGRATIONS_CONFIG_FILE: integrationsConfigFile,
+    DSH_GOOGLE_CONFIG_DIR: googleConfigDirectory,
+    DSH_EMAIL_ACCOUNTS_FILE: join(emailDirectory, 'accounts.json'),
+    DSH_EMAIL_CREDENTIALS_DIR: emailCredentialsDirectory,
+    DSH_EMAIL_KEYCHAIN_SERVICE: 'DeepSeek Harness Optimized Email Authorization Code',
+    DSH_NOTION_AUTH_DIR: notionAuthDirectory,
+    DSH_GITHUB_ENABLED: enabledIntegrations.github ? '1' : '0',
+    DSH_NOTION_ENABLED: enabledIntegrations.notion ? '1' : '0',
+  },
   shell: process.platform === 'win32',
   stdio: 'inherit',
 })

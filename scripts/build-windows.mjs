@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
 import { build as bundle } from 'esbuild'
 import { Arch, Platform, build as buildElectron } from 'electron-builder'
+import { stageVendorBinaries } from './vendor-binaries.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
@@ -64,7 +65,10 @@ async function stageApplicationCode() {
   for (const filename of ['LICENSE', 'NOTICE']) {
     await copyFile(join(root, filename), join(bundledApp, filename))
   }
-  for (const filename of ['package.json', 'cordis.yml', 'cordis.patch.yml', 'auto-compact-continue.mjs']) {
+  for (const filename of [
+    'package.json', 'cordis.yml', 'cordis.patch.yml', 'auto-compact-continue.mjs',
+    'tool-integrations-local.mjs', 'tool-google-workspace-local.mjs',
+  ]) {
     await copyFile(join(root, 'profile', filename), join(bundledApp, 'profile', filename))
   }
   await copyFile(join(root, 'scripts', 'app-server.mjs'), join(bundledApp, 'scripts', 'app-server.mjs'))
@@ -78,6 +82,17 @@ async function stageApplicationCode() {
     external: ['@deepseek-ai/dsh-tools'],
     legalComments: 'eof',
   })
+  await bundle({
+    entryPoints: [join(root, 'profile', 'tool-email-local.mjs')],
+    outfile: join(bundledApp, 'profile', 'tool-email-local.mjs'),
+    bundle: true,
+    platform: 'node',
+    format: 'esm',
+    target: 'node22',
+    external: ['@deepseek-ai/dsh-tools'],
+    banner: { js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" },
+    legalComments: 'eof',
+  })
   const path = `${dirname(process.execPath)}${delimiter}${process.env.PATH || ''}`
   await run('pnpm', [
     '--dir', bundledApp,
@@ -85,6 +100,11 @@ async function stageApplicationCode() {
     '--config.node-linker=hoisted',
     'install', '--prod', '--frozen-lockfile',
   ], { env: { ...process.env, PATH: path } })
+  await stageVendorBinaries({
+    targetPlatform: 'win32',
+    targetArch: architecture,
+    destination: join(bundledApp, 'vendor'),
+  })
   await removeGeneratedCommandShims(join(bundledApp, 'node_modules'))
   const links = await findSymbolicLinks(bundledApp)
   if (links.length > 0) throw new Error(`Windows staging contains symbolic links: ${links.slice(0, 5).join(', ')}`)
@@ -108,6 +128,7 @@ async function validateWindowsDependencies() {
 async function stageShell() {
   await mkdir(shellRoot, { recursive: true })
   await copyFile(join(root, 'windows', 'electron-main.cjs'), join(shellRoot, 'electron-main.cjs'))
+  await copyFile(join(root, 'windows', 'email-preload.cjs'), join(shellRoot, 'email-preload.cjs'))
   const shellManifest = {
     name: 'deepseek-harness-optimized-windows-shell',
     version,
@@ -155,7 +176,7 @@ async function buildPortableExecutable() {
         asar: true,
         npmRebuild: false,
         directories: { output: outputRoot, buildResources: join(root, 'windows') },
-        files: ['electron-main.cjs', 'package.json'],
+        files: ['electron-main.cjs', 'email-preload.cjs', 'package.json'],
         afterPack: async context => {
           const destination = join(context.appOutDir, 'resources', 'app')
           await rm(destination, { recursive: true, force: true })
@@ -168,7 +189,7 @@ async function buildPortableExecutable() {
         win: {
           target: [{ target: 'portable', arch: [architecture] }],
           executableName: 'DeepSeek Harness Optimized',
-          icon: join(root, 'windows', 'AppIcon.ico'),
+          icon: join(root, 'windows', 'AppIcon.png'),
           signExecutable: false,
         },
         portable: {
