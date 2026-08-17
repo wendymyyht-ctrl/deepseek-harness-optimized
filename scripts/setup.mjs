@@ -1,7 +1,8 @@
 import { lstat, mkdir, realpath, symlink } from 'node:fs/promises'
-import { homedir } from 'node:os'
+import { arch, homedir, platform } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { stageVendorBinaries } from './vendor-binaries.mjs'
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const sourceProfile = join(repositoryRoot, 'profile')
@@ -35,10 +36,17 @@ export async function installProfile() {
     await symlink(sourceProfile, destination, process.platform === 'win32' ? 'junction' : 'dir')
   }
 
-  return { home, name, destination }
+  const vendor = await stageVendorBinaries({
+    targetPlatform: platform(),
+    targetArch: arch(),
+    destination: join(repositoryRoot, 'vendor'),
+  })
+
+  return { home, name, destination, vendor }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const installed = await installProfile()
   process.stdout.write(`Profile ready: ${installed.destination}\nRuntime home: ${installed.home}\n`)
+  process.stdout.write(`Google Workspace CLI: ${installed.vendor.gws}\nGitHub MCP server: ${installed.vendor.githubMcp}\n`)
 }

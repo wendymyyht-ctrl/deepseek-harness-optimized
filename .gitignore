@@ -1,6 +1,8 @@
 # Dependencies and build output
 node_modules/
+build/
 dist/
+vendor/
 coverage/
 *.log
 .DS_Store
