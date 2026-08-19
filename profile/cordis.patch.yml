@@ -17,6 +17,11 @@
     - id: auto-compact-continue
       name: './auto-compact-continue.mjs'
 
+    # Give text-only routes image understanding and visual-task tools. The
+    # provider remains user-configurable in Settings -> Vision Toolkit.
+    - id: vision-toolkit
+      name: '@anionex/dsh-vision-toolkit'
+
     # Integration controls are local-only. The generated config contains
     # booleans, never OAuth tokens or account credentials.
     - id: tool-integrations-local

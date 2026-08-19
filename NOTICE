@@ -10,3 +10,7 @@ https://github.com/deepseek-ai/deepseek-harness
 Release builds also bundle the Google Workspace CLI 0.22.5 (Apache-2.0) and
 GitHub MCP Server 1.9.0 (MIT). Their upstream LICENSE files are included beside
 the binaries in each desktop application.
+
+Release builds include @anionex/dsh-vision-toolkit 0.1.32 (MIT), which packages
+a pinned adapter of Anionex/agent-vision-toolkit. Its package license and
+upstream attribution files are distributed with the installed dependency.

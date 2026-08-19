@@ -7,6 +7,7 @@ import { pipeline } from 'node:stream/promises'
 import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
 import { build } from 'esbuild'
+import { auditReleaseTree } from './audit-release.mjs'
 import { stageVendorBinaries } from './vendor-binaries.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -126,18 +127,33 @@ async function stageApplicationCode() {
     targetArch: architecture,
     destination: join(bundledApp, 'vendor'),
   })
-  await removeGeneratedCommandShims(join(bundledApp, 'node_modules'))
+  await cleanProductionInstall(bundledApp)
+  await auditReleaseTree(bundledApp)
 }
 
-async function removeGeneratedCommandShims(directory) {
+async function cleanProductionInstall(applicationRoot) {
+  // Package-manager metadata and command shims capture the build machine's
+  // absolute path and are unnecessary because launchers use package entries.
+  await removeGeneratedInstallFiles(join(applicationRoot, 'node_modules'))
+  await rm(join(applicationRoot, 'profile', 'node_modules', '.bin'), {
+    recursive: true,
+    force: true,
+  })
+  // imapflow publishes its upstream TLS fixture key. It is not a user secret
+  // and is never used at runtime, so production artifacts should omit it.
+  await rm(join(applicationRoot, 'profile', 'node_modules', 'imapflow', 'test'), {
+    recursive: true,
+    force: true,
+  })
+}
+
+async function removeGeneratedInstallFiles(directory) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const path = join(directory, entry.name)
-    if (entry.isDirectory() && entry.name === '.bin') {
-      // pnpm command shims contain the absolute build directory. The app starts
-      // dsh by its package entrypoint and needs none of these development CLIs.
+    if (entry.name === '.bin' || entry.name === '.modules.yaml' || entry.name === '.pnpm-workspace-state-v1.json') {
       await rm(path, { recursive: true, force: true })
     } else if (entry.isDirectory()) {
-      await removeGeneratedCommandShims(path)
+      await removeGeneratedInstallFiles(path)
     }
   }
 }

@@ -11,3 +11,13 @@ llm-pi-ai:
         - id: my-model
           contextWindow: 262144
           maxTokens: 32768
+
+# Optional private/local Vision Toolkit provider. Keep real credentials in the
+# Harness credential store; this field is a credential reference, not a key.
+# The endpoint must implement OpenAI-compatible multimodal Chat Completions.
+vision-toolkit:
+  provider:
+    baseUrl: http://127.0.0.1:8000/v1
+    credential: MY_LOCAL_VISION_CREDENTIAL
+    model: my-local-vision-model
+    protocol: openai

@@ -2,7 +2,7 @@
 
 [中文说明](README.zh-CN.md)
 
-A privacy-safe, reusable [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web profile. It keeps large HTML outside the model context until the model needs specific evidence, and automatically compacts and continues when a response reaches its output limit.
+A privacy-safe, reusable [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web profile. It adds visual tools to text-only model routes, keeps large HTML outside the model context until the model needs specific evidence, and automatically compacts and continues when a response reaches its output limit.
 
 This is an independent community project, not an official DeepSeek release. It contains no API key, OAuth token, email account, conversation, memory database, browser profile, personal automation, local model, or model weight. Every user supplies their own model endpoint and connects their own accounts.
 
@@ -39,9 +39,15 @@ This usually cuts prompt construction and inference time substantially on large 
 
 When the provider ends a response with `max-tokens`, the profile asks Harness to compact eligible context and queues a continuation automatically. It does not trigger for ordinary stops, and it does not continue when no safe compaction is available.
 
+### Vision Toolkit
+
+Version 1.3.0 includes pinned `@anionex/dsh-vision-toolkit` 0.1.32. Text-only routes such as a locally served DeepSeek model gain a `(Vision Toolkit)` variant that can inspect pasted images, perform focused image Q&A and OCR, locate UI elements, crop or trace assets, compare pixels, and support screenshot-driven GUI workflows. Models with native image input can continue to use their own multimodal route directly.
+
+Open **Settings → Vision Toolkit** to test or change its provider. The plug-in's zero-configuration default is a shared external service at `https://vision.anionex.me/v1`; when a vision operation runs, the selected images and task-focused prompt leave the computer and are processed by that service. For a fully local or private workflow, replace it with your own compatible multimodal endpoint and credential before submitting images. Cropping, color extraction, tracing, HTML rendering, and pixel comparison are local operations; model-backed image understanding follows the provider you configure.
+
 ### Optional account integrations
 
-The macOS and Windows 1.2.0 builds contain reusable integration code, but no pre-connected account:
+The macOS and Windows 1.3.0 builds contain reusable integration code, but no pre-connected account:
 
 - Google Workspace through pinned `gws` 0.22.5 binaries; use `google_workspace_auth_status` and `google_workspace_auth_login`, then complete your own Google OAuth flow.
 - GitHub through GitHub's official MCP server 1.9.0 and browser OAuth.
@@ -56,7 +62,7 @@ Harness supports DeepSeek, catalog providers, and custom OpenAI-compatible endpo
 
 ### Local models and persistent conversations
 
-Ollama, vLLM, llama.cpp, and other local OpenAI-compatible servers can be added as custom providers, including locally served DeepSeek and Qwen models. No model weights are bundled, and the project does not hard-code a 64K, 262K, or 1M context limit; the selected model and inference server determine the actual limit.
+Ollama, vLLM, llama.cpp, and other local OpenAI-compatible servers can be added as custom providers, including locally served DeepSeek, Qwen, GLM, and Kimi models. Native multimodal routes can accept images directly; a text-only route can use Vision Toolkit with a separate local or hosted vision endpoint. No model weights are bundled, and the project does not hard-code a 64K, 262K, or 1M context limit; the selected model and inference server determine the actual limit.
 
 Harness stores conversations locally so an existing session can be reopened after the app or computer restarts. This is durable session history, not silent global memory: the public build does not inject every old conversation into every new chat and ships no personal memory database. See [Implemented features](FEATURES.md) for the exact boundary.
 
@@ -108,11 +114,11 @@ For advanced configuration, copy the structure in `settings.example.yaml` into `
 npm run verify
 ```
 
-The test suite covers routing, indexing, bounded source access, comparison, index caching, and automatic continuation. The security check rejects common credential formats, private runtime filenames, model weights and personal macOS paths. Release builds download pinned Google Workspace CLI and GitHub MCP binaries and verify their published SHA-256 checksums before packaging.
+The test suite covers routing, indexing, bounded source access, comparison, index caching, automatic continuation, and the pinned Vision Toolkit packaging contract. The security check rejects common credential formats, private runtime filenames, model weights and personal macOS paths. Release builds download pinned Google Workspace CLI and GitHub MCP binaries and verify their published SHA-256 checksums before packaging.
 
 ## Intentionally excluded
 
-Personal memory, past conversations, connected-account records, OAuth tokens, browser state, automations, API credentials, local model routers, launch services, GGUF/SafeTensors files and machine-specific paths are intentionally excluded. Reusable Google, email, Notion and GitHub integration code is included; every user authorizes their own account locally. A local DeepSeek or Qwen server can be added from **Settings → Models** as a custom OpenAI-compatible provider.
+Personal memory, past conversations, connected-account records, OAuth tokens, browser state, automations, API credentials, local model routers, launch services, GGUF/SafeTensors files and machine-specific paths are intentionally excluded. Reusable Vision Toolkit, Google, email, Notion and GitHub integration code is included; every user configures providers and authorizes accounts on their own computer. Local DeepSeek, Qwen, GLM, or Kimi servers can be added from **Settings → Models** as custom OpenAI-compatible providers.
 
 ## License
 

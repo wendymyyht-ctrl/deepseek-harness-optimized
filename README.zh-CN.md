@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-这是一个可复用、可公开分享的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web Profile。它会先在 Node.js 工具层完整读取并解析大型 HTML，只把与当前任务有关的证据送入模型；当模型输出达到上限时，也会自动压缩上下文并续写。
+这是一个可复用、可公开分享的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web Profile。它为纯文本模型路由增加视觉工具，会先在 Node.js 工具层完整读取并解析大型 HTML，只把与当前任务有关的证据送入模型；当模型输出达到上限时，也会自动压缩上下文并续写。
 
 这是独立的社区项目，不是 DeepSeek 官方发行版。仓库不包含 API Key、OAuth Token、邮箱账号、历史对话、记忆数据库、浏览器资料、个人自动化、本地模型或模型权重。下载者必须配置自己的模型，并连接自己的账号。
 
@@ -39,9 +39,15 @@ Windows 10/11 x64 用户可以从 [GitHub Releases](https://github.com/wendymyyh
 
 当提供方以 `max-tokens` 结束回答时，插件会要求 Harness 压缩可压缩的上下文，然后自动排队继续完成原任务。普通停止不会触发；如果当前没有可安全压缩的内容，也不会强行续写。
 
+### Vision Toolkit 视觉工具
+
+1.3.0 固定集成 `@anionex/dsh-vision-toolkit` 0.1.32。本地 DeepSeek 等纯文本路由会得到一个带 `(Vision Toolkit)` 后缀的变体，可理解粘贴图片、按任务进行图片问答与 OCR、定位界面元素、裁切或描摹素材、比较像素，并支持基于截图的 GUI 工作流。原生支持图片输入的模型可以继续直接使用自己的多模态路由。
+
+可在**设置 → Vision Toolkit**中测试或更换视觉 Provider。插件的零配置默认值是共享的外部服务 `https://vision.anionex.me/v1`；执行视觉理解操作时，所选图片和与任务有关的提示词会离开本机，由该服务处理。如果要求图片全程留在本地或私有网络，请先换成自己的兼容多模态端点和凭据，再提交图片。裁切、颜色提取、描摹、HTML 渲染和像素比较属于本地操作；需要模型理解图片的操作则遵循用户配置的 Provider。
+
 ### 可选账号集成
 
-macOS 与 Windows 1.2.0 安装包都包含可复用的集成功能，但没有预先登录任何账号：
+macOS 与 Windows 1.3.0 安装包都包含可复用的集成功能，但没有预先登录任何账号：
 
 - Google Workspace：内置并校验 `gws` 0.22.5；通过 `google_workspace_auth_status` / `google_workspace_auth_login` 发起你自己的 Google OAuth。
 - GitHub：使用 GitHub 官方 MCP Server 1.9.0，通过浏览器 OAuth 登录。
@@ -56,7 +62,7 @@ Harness 可以配置 DeepSeek、其他目录提供方，以及自定义 OpenAI �
 
 ### 本地模型与会话持久化
 
-Ollama、vLLM、llama.cpp 等本地 OpenAI 兼容服务可以作为自定义 Provider 使用，因此本地 DeepSeek、Qwen 和其他模型都能接入。安装包不附带模型权重，上下文长度也不强制写死；实际上限由模型与推理服务决定。
+Ollama、vLLM、llama.cpp 等本地 OpenAI 兼容服务可以作为自定义 Provider 使用，因此本地 DeepSeek、Qwen、GLM、Kimi 和其他模型都能接入。原生多模态路由可以直接接收图片；纯文本路由则可通过 Vision Toolkit 搭配另一个本地或托管视觉端点。安装包不附带模型权重，上下文长度也不强制写死；实际上限由模型与推理服务决定。
 
 Harness 会把会话保存在本机，退出应用或重启后可以重新打开旧会话继续。这属于**会话持久化与跨重启恢复**。当前公开版不会把所有旧对话自动注入每个新对话，也不附带个人全局记忆数据库。完整功能边界见[已实现功能](FEATURES.zh-CN.md)。
 
@@ -108,11 +114,11 @@ DSH_HOME=/path/to/runtime DSH_PROFILE=my-profile npm start
 npm run verify
 ```
 
-测试覆盖自动路由、HTML 索引、受限源码读取、版本比较、索引缓存和自动续写。安全检查会拦截常见密钥格式、私人运行数据文件、模型权重和个人机器路径。构建安装包时会下载固定版本的 Google Workspace CLI 与 GitHub MCP 二进制文件，并核对其公开 SHA-256 后再打包。
+测试覆盖自动路由、HTML 索引、受限源码读取、版本比较、索引缓存、自动续写和 Vision Toolkit 固定版本打包约束。安全检查会拦截常见密钥格式、私人运行数据文件、模型权重和个人机器路径。构建安装包时会下载固定版本的 Google Workspace CLI 与 GitHub MCP 二进制文件，并核对其公开 SHA-256 后再打包。
 
 ## 有意排除的内容
 
-个人记忆、历史对话、已连接账号记录、OAuth Token、浏览器状态、自动化任务、API 凭据、本地模型路由器、启动服务、GGUF/SafeTensors 权重和机器专属路径都不会公开。公开版只包含 Google、邮箱、Notion、GitHub 的通用集成代码，每位下载者必须在自己的电脑上授权。用户仍可在**设置 → 模型**中，把本地 DeepSeek 或 Qwen 服务添加成自定义 OpenAI 兼容提供方。
+个人记忆、历史对话、已连接账号记录、OAuth Token、浏览器状态、自动化任务、API 凭据、本地模型路由器、启动服务、GGUF/SafeTensors 权重和机器专属路径都不会公开。公开版只包含 Vision Toolkit、Google、邮箱、Notion、GitHub 的通用集成代码，每位下载者必须在自己的电脑上配置 Provider 并授权账号。用户仍可在**设置 → 模型**中，把本地 DeepSeek、Qwen、GLM 或 Kimi 服务添加成自定义 OpenAI 兼容提供方。
 
 ## 许可证
 
