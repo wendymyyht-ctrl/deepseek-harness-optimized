@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
 import { build as bundle } from 'esbuild'
 import { Arch, Platform, build as buildElectron } from 'electron-builder'
+import { auditReleaseTree } from './audit-release.mjs'
 import { stageVendorBinaries } from './vendor-binaries.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -36,13 +37,25 @@ async function sha256(path) {
   return hash.digest('hex')
 }
 
-async function removeGeneratedCommandShims(directory) {
+async function cleanProductionInstall(applicationRoot) {
+  await removeGeneratedInstallFiles(join(applicationRoot, 'node_modules'))
+  await rm(join(applicationRoot, 'profile', 'node_modules', '.bin'), {
+    recursive: true,
+    force: true,
+  })
+  await rm(join(applicationRoot, 'profile', 'node_modules', 'imapflow', 'test'), {
+    recursive: true,
+    force: true,
+  })
+}
+
+async function removeGeneratedInstallFiles(directory) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const path = join(directory, entry.name)
-    if (entry.isDirectory() && entry.name === '.bin') {
+    if (entry.name === '.bin' || entry.name === '.modules.yaml' || entry.name === '.pnpm-workspace-state-v1.json') {
       await rm(path, { recursive: true, force: true })
     } else if (entry.isDirectory()) {
-      await removeGeneratedCommandShims(path)
+      await removeGeneratedInstallFiles(path)
     }
   }
 }
@@ -105,7 +118,8 @@ async function stageApplicationCode() {
     targetArch: architecture,
     destination: join(bundledApp, 'vendor'),
   })
-  await removeGeneratedCommandShims(join(bundledApp, 'node_modules'))
+  await cleanProductionInstall(bundledApp)
+  await auditReleaseTree(bundledApp)
   const links = await findSymbolicLinks(bundledApp)
   if (links.length > 0) throw new Error(`Windows staging contains symbolic links: ${links.slice(0, 5).join(', ')}`)
 }

@@ -11,6 +11,7 @@
 | HTML 比较与缓存 | 可程序化比较两个页面的结构、内容和内嵌记录，并按文件状态缓存索引。 |
 | 自动压缩并续写 | 当提供方以 `max-tokens` 截断输出时，先压缩可压缩上下文，再自动继续原任务，避免手动发送“继续”。 |
 | 上下文压力控制 | 重新启用 Harness 的基础压缩和大型工具结果裁剪，减少无关工具输出长期占用上下文。 |
+| Vision Toolkit | 固定集成图片问答、OCR、元素定位、素材裁切/描摹、像素比较和基于截图的工作流；纯文本模型可使用 `(Vision Toolkit)` 路由变体。 |
 | Google Workspace | 内置固定版本的 `gws` 命令桥接；用户在自己的电脑上完成 OAuth，支持 Drive、Gmail、Calendar、Docs、Sheets、Slides 等服务。 |
 | GitHub 与 Notion | 两者都是可选连接器，默认不登录；启用后分别通过官方 GitHub MCP Server 和 Notion 官方托管 MCP 完成浏览器 OAuth。 |
 | QQ/网易邮箱 | 支持 IMAP/SMTP 列表、检索、读取、连接测试和经用户确认后的发送；授权码由 macOS 钥匙串或 Windows DPAPI 保护。 |
@@ -20,13 +21,18 @@
 | 功能 | 当前行为 |
 |---|---|
 | 本地部署 | macOS App 与 Windows EXE 均内置运行时；源码版也可通过 Node.js 运行。所有服务默认只监听本机回环地址。 |
-| 本地模型 | 可把 Ollama、vLLM、llama.cpp 或其他 OpenAI 兼容服务配置成自定义 Provider，连接本地 DeepSeek、Qwen 等模型。模型权重不包含在安装包中。 |
+| 本地模型 | 可把 Ollama、vLLM、llama.cpp 或其他 OpenAI 兼容服务配置成自定义 Provider，连接本地 DeepSeek、Qwen、GLM、Kimi 等模型。模型权重不包含在安装包中。 |
+| 图片输入路由 | 原生多模态模型继续直接接收图片；纯文本模型可以选择由独立视觉 Provider 支持的 `(Vision Toolkit)` 变体。 |
 | 多模型热切换 | DeepSeek、目录 Provider 和自定义 OpenAI 兼容 Provider 可以并存；保存选择后后续请求生效，无须重启 Harness。 |
 | 长上下文 | 不把上下文强制写死为 64K、262K 或 1M；实际上限由所选模型和推理服务决定。 |
 | 会话持久化 | 对话以 JSONL 保存在本机运行目录，关闭应用或重启电脑后仍能在侧栏恢复原会话。 |
 | 任务工具 | 保留 Harness 的文件、终端、计划、目标、子 Agent、工作流和模型配置界面；实际可用范围受运行环境及权限策略影响。 |
 | 隐私隔离 | 每位用户使用自己的 API Key、模型服务、历史和运行目录；公开仓库与安装包不携带作者的私人数据。 |
-| 统一版本 | macOS App 与 Windows EXE 使用同一个 `1.2.0` 应用版本和 Release 标签。 |
+| 统一版本 | macOS App 与 Windows EXE 使用同一个 `1.3.0` 应用版本和 Release 标签。 |
+
+## 视觉数据边界
+
+Vision Toolkit 内置 Provider 是共享的外部服务。需要模型理解图片时，所选图片和与任务有关的提示词会发送给该 Provider。要求数据全程留在本地或私有网络的用户，应在**设置 → Vision Toolkit**中换成自己的兼容多模态端点。确定性的裁切、描摹、颜色提取、渲染和像素比较在本地运行。
 
 ## 关于“跨对话记忆”的准确说明
 
