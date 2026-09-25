@@ -1,4 +1,5 @@
-import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
+import { createRequire } from 'node:module'
+import { copyFile, cp, mkdir, readFile, writeFile, symlink, lstat, readlink, rm } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { homedir, platform } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
@@ -30,6 +31,8 @@ const managedFiles = [
   'tool-integrations-local.mjs',
   'tool-google-workspace-local.mjs',
   'tool-email-local.mjs',
+  'tool-memory-local.mjs', 'tool-document-local.mjs', 'tool-media-local.mjs',
+  'tool-automation-local.mjs', 'automation-core-local.mjs', 'automation-runner-local.mjs', 'web-search-public.mjs',
 ]
 
 const integrationsDirectory = join(runtimeHome, 'integrations')
@@ -65,11 +68,26 @@ async function installManagedProfile() {
       `${targetProfile} already exists but is not managed by this app; refusing to overwrite it`,
     )
   }
+  const manifest = JSON.parse(await readFile(join(appRoot, 'package.json'), 'utf8'))
+  let previous
+  try { previous = JSON.parse(await readFile(markerPath, 'utf8')) } catch (error) { if(error.code !== 'ENOENT') throw error }
+  const modules = join(targetProfile, 'node_modules')
+  const bundledModules = existsSync(join(sourceProfile, 'node_modules')) ? join(sourceProfile, 'node_modules') : join(appRoot, 'node_modules')
+  await mkdir(targetProfile, { recursive: true })
+  try {
+    const info = await lstat(modules)
+    if (!info.isSymbolicLink()) throw new Error('Managed node_modules must be a link')
+    if (resolve(await readlink(modules)) !== bundledModules) { await rm(modules); await symlink(bundledModules, modules, platform() === 'win32' ? 'junction' : 'dir') }
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error
+    await symlink(bundledModules, modules, platform() === 'win32' ? 'junction' : 'dir')
+  }
+  if (previous?.version === manifest.version) return
+  if (previous) await cp(targetProfile, join(runtimeHome, 'profile-backups', `${profileName}-${previous.version}-${Date.now()}`), { recursive: true })
   await mkdir(targetProfile, { recursive: true })
   for (const filename of managedFiles) {
     await copyFile(join(sourceProfile, filename), join(targetProfile, filename))
   }
-  const manifest = JSON.parse(await readFile(join(appRoot, 'package.json'), 'utf8'))
   await writeFile(markerPath, `${JSON.stringify({ version: manifest.version }, null, 2)}\n`, 'utf8')
 }
 
@@ -86,6 +104,7 @@ const child = spawn(process.execPath, [
   dshBin,
   '--profile',
   profileName,
+  '--no-open',
   '--port',
   '0',
   ...process.argv.slice(2),
@@ -96,6 +115,8 @@ const child = spawn(process.execPath, [
     DSH_HOME: runtimeHome,
     DSH_RUNTIME_HOME: runtimeHome,
     DSH_NODE_BIN: process.execPath,
+    DSH_PLAYWRIGHT_ENTRY: join(dirname(createRequire(join(appRoot, 'profile', 'package.json')).resolve('@playwright/mcp/package.json')), 'cli.js'),
+    DSH_BROWSER_HOME: join(runtimeHome, 'browser-profile'),
     DSH_GWS_BIN: join(appRoot, 'vendor', 'bin', `gws${executableSuffix}`),
     DSH_GITHUB_MCP_BIN: join(appRoot, 'vendor', 'bin', `github-mcp-server${executableSuffix}`),
     DSH_MCP_REMOTE_ENTRY: mcpRemoteEntry(),
@@ -111,11 +132,19 @@ const child = spawn(process.execPath, [
   stdio: 'inherit',
 })
 
+const scheduleRunner = process.platform === 'win32' ? spawn(process.execPath,
+  [join(targetProfile, 'automation-runner-local.mjs')], {
+    env: { ...process.env, DSH_HOME: runtimeHome }, stdio: 'inherit',
+  }) : null
+scheduleRunner?.once('error', error => process.stderr.write(`Automation runner: ${error.message}\n`))
+child.once('exit', () => scheduleRunner?.kill())
+
 let stopping = false
 function stop(signal) {
   if (stopping) return
   stopping = true
   if (!child.killed) child.kill(signal)
+  scheduleRunner?.kill()
 }
 
 process.once('SIGINT', () => stop('SIGINT'))

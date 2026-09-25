@@ -20,6 +20,14 @@ Apple Silicon users on macOS 13 or newer can download the ZIP or DMG from [GitHu
 
 The community build is ad-hoc signed and not notarized. On first launch, Control-click the app and choose **Open** if macOS blocks a normal double-click. Credentials and conversations are written only to `~/Library/Application Support/DeepSeek Harness Optimized`.
 
+## v1.4.0 upgrade
+
+Based on official DSH **0.1.7-rc.1** (a release candidate). Includes the new agent preset format, V4 compaction/continuation hooks, authenticated desktop startup and a local compatibility adapter for Vision Toolkit 0.1.45 settings. Model endpoints and credentials are configured by each user.
+
+Additional local tools: explicit SQLite memory, public web search, document extraction through `markitdown`, media metadata/subtitles through `yt-dlp`, and cron automation. Install `markitdown` and `yt-dlp` separately when using those tools; set `DSH_MARKITDOWN_BIN` / `DSH_YT_DLP_BIN` to absolute executable paths if they are not on PATH. These optional programs and local model weights are not bundled. On macOS, automations use launchd; on Windows, cron jobs run **only while the app is open**. Task definitions persist on both platforms.
+
+The app preserves a copy of the prior managed profile under `profile-backups/` when upgrading. Credentials, sessions and integration state remain in the same runtime home. Manual edits to the old managed profile are backed up; reapply custom plugin edits in the new preset format. Profile edits made in v1.4.0 are no longer overwritten on each launch.
+
 ## What it changes
 
 ### Indexed HTML fast path
@@ -41,13 +49,13 @@ When the provider ends a response with `max-tokens`, the profile asks Harness to
 
 ### Vision Toolkit
 
-Version 1.3.0 includes pinned `@anionex/dsh-vision-toolkit` 0.1.32. Text-only routes such as a locally served DeepSeek model gain a `(Vision Toolkit)` variant that can inspect pasted images, perform focused image Q&A and OCR, locate UI elements, crop or trace assets, compare pixels, and support screenshot-driven GUI workflows. Models with native image input can continue to use their own multimodal route directly.
+Version 1.4.0 includes pinned `@anionex/dsh-vision-toolkit` 0.1.45. Text-only routes such as a locally served DeepSeek model gain a `(Vision Toolkit)` variant that can inspect pasted images, perform focused image Q&A and OCR, locate UI elements, crop or trace assets, compare pixels, and support screenshot-driven GUI workflows. Models with native image input can continue to use their own multimodal route directly.
 
 Open **Settings → Vision Toolkit** to test or change its provider. The plug-in's zero-configuration default is a shared external service at `https://vision.anionex.me/v1`; when a vision operation runs, the selected images and task-focused prompt leave the computer and are processed by that service. For a fully local or private workflow, replace it with your own compatible multimodal endpoint and credential before submitting images. Cropping, color extraction, tracing, HTML rendering, and pixel comparison are local operations; model-backed image understanding follows the provider you configure.
 
 ### Optional account integrations
 
-The macOS and Windows 1.3.0 builds contain reusable integration code, but no pre-connected account:
+The macOS and Windows 1.4.0 builds contain reusable integration code, but no pre-connected account:
 
 - Google Workspace through pinned `gws` 0.22.5 binaries; use `google_workspace_auth_status` and `google_workspace_auth_login`, then complete your own Google OAuth flow.
 - GitHub through GitHub's official MCP server 1.9.0 and browser OAuth.
@@ -64,11 +72,11 @@ Harness supports DeepSeek, catalog providers, and custom OpenAI-compatible endpo
 
 Ollama, vLLM, llama.cpp, and other local OpenAI-compatible servers can be added as custom providers, including locally served DeepSeek, Qwen, GLM, and Kimi models. Native multimodal routes can accept images directly; a text-only route can use Vision Toolkit with a separate local or hosted vision endpoint. No model weights are bundled, and the project does not hard-code a 64K, 262K, or 1M context limit; the selected model and inference server determine the actual limit.
 
-Harness stores conversations locally so an existing session can be reopened after the app or computer restarts. This is durable session history, not silent global memory: the public build does not inject every old conversation into every new chat and ships no personal memory database. See [Implemented features](FEATURES.md) for the exact boundary.
+Harness stores conversations locally so an existing session can be reopened after the app or computer restarts. Session history remains local. The new explicit memory tools save and search selected facts in a separate local SQLite database; old conversations are not automatically injected, and no personal database is bundled. See [Implemented features](FEATURES.md) for the exact boundary.
 
 ## Requirements
 
-- Node.js `22.19` or newer in the 22.x line, or Node.js 24+
+- Node.js 24+
 - npm, pnpm, or another package manager that supports npm workspaces
 - A model API key or an accessible OpenAI-compatible local endpoint
 
@@ -77,9 +85,9 @@ Harness stores conversations locally so an existing session can be reopened afte
 ```bash
 git clone https://github.com/wendymyyht-ctrl/deepseek-harness-optimized.git
 cd deepseek-harness-optimized
-npm install
-npm run vendor:install
-npm start
+pnpm install
+pnpm vendor:install
+pnpm start
 ```
 
 Open the URL printed by Harness, normally `http://127.0.0.1:3080`. Then open **Settings → Models**:
@@ -93,7 +101,7 @@ Credentials are stored under the runtime home (by default `~/.dsh-optimized/.cre
 Pass normal Web arguments after `--`:
 
 ```bash
-npm start -- --help
+pnpm start -- --help
 ```
 
 ## Runtime isolation
@@ -101,7 +109,7 @@ npm start -- --help
 The launcher creates a dedicated runtime home at `~/.dsh-optimized` and links this repository's profile into it. Override the location or profile name if needed:
 
 ```bash
-DSH_HOME=/path/to/runtime DSH_PROFILE=my-profile npm start
+DSH_HOME=/path/to/runtime DSH_PROFILE=my-profile pnpm start
 ```
 
 The setup script refuses to overwrite an existing profile directory or a link to another profile.

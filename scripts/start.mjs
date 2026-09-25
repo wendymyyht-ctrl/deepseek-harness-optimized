@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module'
 import { spawn } from 'node:child_process'
 import { mkdir, readFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
@@ -37,6 +38,8 @@ const child = spawn(executable, ['--profile', installed.name, ...process.argv.sl
     DSH_HOME: installed.home,
     DSH_RUNTIME_HOME: installed.home,
     DSH_NODE_BIN: process.execPath,
+    DSH_PLAYWRIGHT_ENTRY: join(dirname(createRequire(join(repositoryRoot, 'profile', 'package.json')).resolve('@playwright/mcp/package.json')), 'cli.js'),
+    DSH_BROWSER_HOME: join(installed.home, 'browser-profile'),
     DSH_GWS_BIN: installed.vendor.gws,
     DSH_GITHUB_MCP_BIN: installed.vendor.githubMcp,
     DSH_MCP_REMOTE_ENTRY: join(repositoryRoot, 'profile', 'node_modules', 'mcp-remote', 'dist', 'proxy.js'),
@@ -52,6 +55,13 @@ const child = spawn(executable, ['--profile', installed.name, ...process.argv.sl
   shell: process.platform === 'win32',
   stdio: 'inherit',
 })
+
+const scheduleRunner = process.platform === 'win32' ? spawn(process.execPath,
+  [join(installed.destination, 'automation-runner-local.mjs')], {
+    env: { ...process.env, DSH_HOME: installed.home }, stdio: 'inherit',
+  }) : null
+scheduleRunner?.once('error', error => process.stderr.write(`Automation runner: ${error.message}\n`))
+child.once('exit', () => scheduleRunner?.kill())
 
 child.once('error', error => {
   process.stderr.write(`Unable to start DeepSeek Harness: ${error.message}\n`)

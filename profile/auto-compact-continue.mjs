@@ -1,44 +1,25 @@
-const PLUGIN_ID = 'auto-compact-continue'
-const CONTINUE_TEXT = 'Continue exactly where the previous response was truncated. Do not repeat completed content. Finish the original task.'
-
-export const name = PLUGIN_ID
+export const name = 'auto-compact-continue'
 export const inject = ['compaction']
-
-export function stepFinishedAtMaxTokens(session, turn) {
-  for (let index = session.events.length - 1; index >= 0; index -= 1) {
-    const event = session.events[index]
-    if (event.type === 'assistant/chunk' && event.data.turn === turn) {
-      return event.data.chunk?.type === 'finish'
-        && event.data.chunk.reason?.kind === 'max-tokens'
-    }
-    if (event.type === 'turn/start' && event.data.turn === turn) return false
-  }
-  return false
+const CONTINUE_TEXT = 'Continue exactly where the previous response was truncated. Do not repeat completed content. Finish the original task.'
+export function isTruncated(event) {
+  if(event.type !== 'assistant/message') return false
+  const finish = [...event.data.stream].reverse().find(record => record.type === 'chunk' && record.chunk.type === 'finish')
+  return finish?.chunk.reason?.kind === 'max-tokens'
 }
-
-function continuationMessage() {
-  return Object.freeze({
-    id: crypto.randomUUID(),
-    role: 'user',
-    content: Object.freeze([{ type: 'text', text: CONTINUE_TEXT }]),
-    source: Object.freeze({ kind: 'plugin', plugin: PLUGIN_ID }),
-  })
-}
-
 export function apply(ctx) {
-  ctx.on('agent/turn-stopping', async ({ agent, turn, signal }) => {
-    if (signal.aborted || !stepFinishedAtMaxTokens(agent.session, turn)) return
+  const endings = new WeakMap()
+  ctx.on('session/event', (session,event) => {
+    if(event.type === 'assistant/message') endings.set(session,{turn:event.data.turn,truncated:isTruncated(event)})
+  })
+  ctx.on('agent/turn-stopping', async ({agent,turn,signal}) => {
+    const ending=endings.get(agent.session)
+    if(signal.aborted || ending?.turn !== turn || !ending.truncated) return
+    endings.delete(agent.session)
     try {
-      const result = await ctx.compaction.compactIfNeeded(agent, 'pressure', signal)
-      if (result === null || signal.aborted) return
-      agent.steer(continuationMessage())
-      ctx.logger.info(
-        `auto compact/continue: shadowed ${result.shadowedSeqs.length} surface nodes `
-        + `after max-token truncation in turn ${turn}`,
-      )
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      ctx.logger.warn(`auto compact/continue skipped: ${message}`)
-    }
+      const result=await ctx.compaction.compactIfNeeded(agent,'pressure',signal)
+      if(result===null || signal.aborted) return
+      agent.steer({id:crypto.randomUUID(),role:'user',content:[{type:'text',text:CONTINUE_TEXT}],source:{kind:'plugin',plugin:name}})
+      ctx.logger.info('auto compact/continue: resumed after output truncation')
+    } catch(error) {ctx.logger.warn('auto compact/continue skipped: '+String(error))}
   })
 }

@@ -255,7 +255,7 @@ final class HarnessAppDelegate: NSObject, NSApplicationDelegate, WKNavigationDel
         for line in lines.dropLast() where !line.isEmpty {
             recentOutput.append(line)
             recentOutput = Array(recentOutput.suffix(20))
-            if serverURL == nil, let range = line.range(of: #"http://127\.0\.0\.1:[0-9]+"#, options: .regularExpression),
+            if serverURL == nil, line.hasPrefix("dsh web: "), let range = line.range(of: #"http://127\.0\.0\.1:[0-9]+(?:/\?token=[A-Za-z0-9_-]+)?"#, options: .regularExpression),
                let url = URL(string: String(line[range])) {
                 serverURL = url
                 window.title = "DeepSeek Harness Optimized"

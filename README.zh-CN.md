@@ -1,3 +1,15 @@
+# v1.4.0 更新说明
+
+本版基于官方 **DSH 0.1.7-rc.1（候选发布版）**，提供 macOS Apple Silicon 应用（ZIP/DMG）和 Windows x64 便携 EXE。新版预设、自动压缩续写、桌面登录令牌和视觉工具设置已适配。
+
+新增可复用的本地记忆、公共搜索、文档提取、媒体信息/字幕与 cron 自动化工具。文档和媒体功能需自行安装 `markitdown`、`yt-dlp`；可用 `DSH_MARKITDOWN_BIN`、`DSH_YT_DLP_BIN` 指定可执行文件。macOS 自动化使用 launchd；Windows 自动化任务会保存，但**仅在应用保持打开时运行**。
+
+旧版应用升级时，原受管理配置会备份到用户数据目录的 `profile-backups/`。账号、凭据、会话与集成数据继续使用原目录；对旧预设的手动修改需参照备份迁移到新版。仓库与发行包不含个人账号、模型密钥或历史会话。
+
+源码构建推荐 Node.js 24+ 和 pnpm，运行 `pnpm install`、`pnpm vendor:install`、`ppnpm start`。下载见 GitHub Releases。macOS 包为 ad-hoc 签名、未公证；Windows EXE 未签名。
+
+---
+
 # DeepSeek Harness 优化配置
 
 [English](README.md)
@@ -41,13 +53,13 @@ Windows 10/11 x64 用户可以从 [GitHub Releases](https://github.com/wendymyyh
 
 ### Vision Toolkit 视觉工具
 
-1.3.0 固定集成 `@anionex/dsh-vision-toolkit` 0.1.32。本地 DeepSeek 等纯文本路由会得到一个带 `(Vision Toolkit)` 后缀的变体，可理解粘贴图片、按任务进行图片问答与 OCR、定位界面元素、裁切或描摹素材、比较像素，并支持基于截图的 GUI 工作流。原生支持图片输入的模型可以继续直接使用自己的多模态路由。
+1.4.0 固定集成 `@anionex/dsh-vision-toolkit` 0.1.45。本地 DeepSeek 等纯文本路由会得到一个带 `(Vision Toolkit)` 后缀的变体，可理解粘贴图片、按任务进行图片问答与 OCR、定位界面元素、裁切或描摹素材、比较像素，并支持基于截图的 GUI 工作流。原生支持图片输入的模型可以继续直接使用自己的多模态路由。
 
 可在**设置 → Vision Toolkit**中测试或更换视觉 Provider。插件的零配置默认值是共享的外部服务 `https://vision.anionex.me/v1`；执行视觉理解操作时，所选图片和与任务有关的提示词会离开本机，由该服务处理。如果要求图片全程留在本地或私有网络，请先换成自己的兼容多模态端点和凭据，再提交图片。裁切、颜色提取、描摹、HTML 渲染和像素比较属于本地操作；需要模型理解图片的操作则遵循用户配置的 Provider。
 
 ### 可选账号集成
 
-macOS 与 Windows 1.3.0 安装包都包含可复用的集成功能，但没有预先登录任何账号：
+macOS 与 Windows 1.4.0 安装包都包含可复用的集成功能，但没有预先登录任何账号：
 
 - Google Workspace：内置并校验 `gws` 0.22.5；通过 `google_workspace_auth_status` / `google_workspace_auth_login` 发起你自己的 Google OAuth。
 - GitHub：使用 GitHub 官方 MCP Server 1.9.0，通过浏览器 OAuth 登录。
@@ -68,7 +80,7 @@ Harness 会把会话保存在本机，退出应用或重启后可以重新打开
 
 ## 环境要求
 
-- Node.js 22 系列需不低于 `22.19`，或使用 Node.js 24+
+- Node.js 24+
 - npm、pnpm，或其他支持 npm workspace 的包管理器
 - 自己的模型 API Key，或可访问的本地 OpenAI 兼容端点
 
@@ -77,9 +89,9 @@ Harness 会把会话保存在本机，退出应用或重启后可以重新打开
 ```bash
 git clone https://github.com/wendymyyht-ctrl/deepseek-harness-optimized.git
 cd deepseek-harness-optimized
-npm install
-npm run vendor:install
-npm start
+pnpm install
+pnpm vendor:install
+pnpm start
 ```
 
 打开 Harness 输出的地址，通常是 `http://127.0.0.1:3080`。进入**设置 → 模型**：
@@ -93,7 +105,7 @@ npm start
 如需查看 Web 启动参数：
 
 ```bash
-npm start -- --help
+pnpm start -- --help
 ```
 
 ## 运行数据隔离
@@ -101,7 +113,7 @@ npm start -- --help
 启动器会创建独立运行目录 `~/.dsh-optimized`，并把仓库内的 Profile 链接进去。如需自定义：
 
 ```bash
-DSH_HOME=/path/to/runtime DSH_PROFILE=my-profile npm start
+DSH_HOME=/path/to/runtime DSH_PROFILE=my-profile pnpm start
 ```
 
 如果目标 Profile 已经是普通目录，或链接到了别处，安装脚本会拒绝覆盖。

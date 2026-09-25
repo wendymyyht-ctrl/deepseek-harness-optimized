@@ -24,7 +24,7 @@ Harness capabilities, and capabilities the project does not claim.
 - Local JSONL conversation persistence and recovery after app or machine restarts.
 - Harness file, terminal, plan, goal, subagent, workflow, and model-settings surfaces, subject to runtime permissions.
 - Per-user runtime data isolation; public artifacts include no credentials, histories, personal memory, or model weights.
-- One shared 1.3.0 version across the macOS and Windows desktop artifacts.
+- One shared 1.4.0 version across the macOS and Windows desktop artifacts.
 
 ## Vision data boundary
 
@@ -39,5 +39,4 @@ crop, trace, color, render, and pixel-diff operations run locally.
 The current release persists and resumes each conversation. It does not silently
 inject every other conversation into a new chat and does not ship a personal
 global-memory database. That distinction limits privacy exposure and context
-bloat. A future explicit memory layer should be opt-in, inspectable, editable,
-deletable, and retrieval-based.
+bloat. Version 1.4.0 adds explicit memory_save, memory_search and memory_forget tools backed by a per-user SQLite database. Facts are stored only when the tool is used; no personal database ships with the app.

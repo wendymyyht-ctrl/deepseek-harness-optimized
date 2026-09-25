@@ -81,9 +81,12 @@ async function stageApplicationCode() {
   for (const filename of [
     'package.json', 'cordis.yml', 'cordis.patch.yml', 'auto-compact-continue.mjs',
     'tool-integrations-local.mjs', 'tool-google-workspace-local.mjs',
+    'tool-memory-local.mjs', 'tool-document-local.mjs', 'tool-media-local.mjs',
+  'tool-automation-local.mjs', 'automation-core-local.mjs', 'automation-runner-local.mjs', 'web-search-public.mjs',
   ]) {
     await copyFile(join(root, 'profile', filename), join(bundledApp, 'profile', filename))
   }
+  await copyFile(join(root, 'scripts', 'patch-vision.mjs'), join(bundledApp, 'scripts', 'patch-vision.mjs'))
   await copyFile(join(root, 'scripts', 'app-server.mjs'), join(bundledApp, 'scripts', 'app-server.mjs'))
   await bundle({
     entryPoints: [join(root, 'profile', 'tool-html-local.mjs')],
@@ -186,6 +189,7 @@ async function buildPortableExecutable() {
         appId: 'io.github.wendymyyht-ctrl.deepseek-harness-optimized',
         productName: 'DeepSeek Harness Optimized',
         electronVersion,
+        electronDist: process.env.DSH_ELECTRON_DIST || undefined,
         compression: 'maximum',
         asar: true,
         npmRebuild: false,

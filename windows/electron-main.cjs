@@ -6,7 +6,7 @@ const { mkdir, readFile, rename, writeFile } = require('node:fs/promises')
 const { join, resolve } = require('node:path')
 
 const APP_NAME = 'DeepSeek Harness Optimized'
-const URL_PATTERN = /http:\/\/(?:127\.0\.0\.1|localhost):[0-9]+/u
+const URL_PATTERN = /http:\/\/(?:127\.0\.0\.1|localhost):[0-9]+(?:\/\?token=[A-Za-z0-9_-]+)?/u
 const MAX_RECENT_LINES = 24
 
 let mainWindow
@@ -216,7 +216,7 @@ function consumeOutput(text) {
     if (!line) continue
     recentOutput.push(line)
     recentOutput = recentOutput.slice(-MAX_RECENT_LINES)
-    if (serverOrigin) continue
+    if (serverOrigin || !line.startsWith('dsh web: ')) continue
     const match = line.match(URL_PATTERN)
     if (!match) continue
     serverOrigin = new URL(match[0]).origin
